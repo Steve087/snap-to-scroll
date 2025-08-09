@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Snap to Scroll</title>
+  <style>
+    body {
+      min-height: 100vh;
+      font-size: 2rem;
+      padding: 0;
+      margin: 0;
+      background: linear-gradient(120deg, #ffefba 0%, #ffffff 100%);
+      transition: background 0.5s;
+      color: #333;
+      overflow-x: hidden;
+    }
+    h1 {
+      margin-top: 100px;
+      font-family: 'Segoe UI', Arial, sans-serif;
+      font-size: 3rem;
+      text-align: center;
+      color: #ff9800;
+      text-shadow: 2px 2px 8px #fff7e6;
+    }
+    .instructions {
+      background: rgba(255,255,255,0.7);
+      border-radius: 16px;
+      padding: 24px;
+      margin: 40px auto;
+      max-width: 600px;
+      box-shadow: 0 2px 16px rgba(255, 168, 0, 0.1);
+      font-size: 1.3rem;
+      text-align: center;
+    }
+    .snap-indicator {
+      position: fixed;
+      top: 30px;
+      right: 30px;
+      width: 60px;
+      height: 60px;
+      background: #ff9800;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 0 20px #ff9800a0;
+      font-size: 2.5rem;
+      color: #fff;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s, transform 0.2s;
+      z-index: 1000;
+    }
+    .snap-indicator.active {
+      opacity: 1;
+      transform: scale(1.2) rotate(-10deg);
+      animation: snapwiggle 0.3s;
+    }
+    @keyframes snapwiggle {
+      0% { transform: scale(1.2) rotate(-10deg);}
+      50% { transform: scale(1.3) rotate(10deg);}
+      100% { transform: scale(1.2) rotate(-10deg);}
+    }
+    .scroll-tip {
+      position: fixed;
+      bottom: 30px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #fffbe7;
+      color: #ff9800;
+      padding: 12px 32px;
+      border-radius: 24px;
+      font-size: 1.1rem;
+      box-shadow: 0 2px 12px #ff980033;
+      opacity: 0.95;
+      z-index: 1000;
+      animation: tipfade 3s 1;
+    }
+    @keyframes tipfade {
+      0% { opacity: 0; }
+      10% { opacity: 1; }
+      90% { opacity: 1; }
+      100% { opacity: 0; }
+    }
+    .page {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      scroll-snap-align: start;
+      padding: 60px 10vw 60px 10vw;
+      box-sizing: border-box;
+      position: relative;
+    }
+    .page:nth-child(even) {
+      background: linear-gradient(120deg, #fffde7 0%, #ffe0b2 100%);
+    }
+    .page-title {
+      font-size: 2.5rem;
+      color: #ff9800;
+      margin-bottom: 24px;
+      text-shadow: 1px 1px 6px #fff7e6;
+    }
+    .funny-img {
+      width: 320px;
+      max-width: 90vw;
+      border-radius: 24px;
+      box-shadow: 0 4px 24px #ff980055;
+      margin: 24px 0;
+      transition: transform 0.3s;
+    }
+    .funny-img:hover {
+      transform: scale(1.08) rotate(-2deg);
+    }
+    .funny-text {
+      font-size: 1.5rem;
+      color: #e65100;
+      margin: 18px 0;
+      text-align: center;
+      font-family: 'Comic Sans MS', 'Comic Sans', cursive, sans-serif;
+      text-shadow: 1px 1px 4px #fffbe7;
+    }
+    .confetti {
+      pointer-events: none;
+      position: fixed;
+      top: 0; left: 0;
+      width: 100vw; height: 100vh;
+      z-index: 2000;
+      overflow: hidden;
+    }
+  </style>
+</head>
+<body>
+  <h1>Snap your fingers to scroll!</h1>
+  <div class="instructions">
+    <p>Give microphone permission when asked.</p>
+    <p>Snap your fingers <b>once</b> near the microphone to scroll <span style="color:#4caf50;">down</span>.<br>
+    Snap <b>twice quickly</b> to scroll <span style="color:#e53935;">up</span>!</p>
+    <p>Try it now! 🎤</p>
+  </div>
+  <div class="snap-indicator" id="snapIndicator" title="Snap detected!">👏</div>
+  <div id="scrollTip" class="scroll-tip" style="display:none;"></div>
+  <canvas id="confetti" class="confetti"></canvas>
+
+  <!-- Pages/Sections -->
+  <div class="page" id="page1">
+    <div class="page-title">Welcome to Snap to Scroll!</div>
+    <div class="funny-text">Why use your hands to scroll when you can use your <b>snaps</b>? <br> <span style="font-size:2.5rem;">🫰</span></div>
+    <img class="funny-img" src="https://media.giphy.com/media/3o7TKtnuHOHHUjR38Y/giphy.gif" alt="Snap fingers gif">
+  </div>
+  <div class="page" id="page2">
+    <div class="page-title">Meet the Snap Scroll Cat</div>
+    <img class="funny-img" src="https://media.giphy.com/media/JIX9t2j0ZTN9S/giphy.gif" alt="Funny cat">
+    <div class="funny-text">This cat tried to scroll with its paws... <br>But you can do it with a snap! <span style="font-size:2rem;">😹</span></div>
+  </div>
+  <div class="page" id="page3">
+    <div class="page-title">Snap Facts</div>
+    <div class="funny-text">
+      <ul style="text-align:left; font-size:1.2rem; color:#e65100;">
+        <li>Fastest snap ever recorded: 7,800 degrees/sec! <span>🤯</span></li>
+        <li>Snapping is used in jazz clubs to clap quietly. <span>🎷</span></li>
+        <li>Some animals can snap too! (Pistol shrimp, anyone?) <span>🦐</span></li>
+      </ul>
+    </div>
+    <img class="funny-img" src="https://media.giphy.com/media/3o6Zt481isNVuQI1l6/giphy.gif" alt="Jazz hands">
+  </div>
+  <div class="page" id="page4">
+    <div class="page-title">Snap Challenge</div>
+    <div class="funny-text">
+      Can you scroll through all the pages using only your snaps?<br>
+      <span style="font-size:2rem;">💪🫰</span>
+    </div>
+    <img class="funny-img" src="https://media.giphy.com/media/l0MYt5jPR6QX5pnqM/giphy.gif" alt="Challenge accepted">
+  </div>
+  <div class="page" id="page5">
+    <div class="page-title">Thanks for Snapping!</div>
+    <div class="funny-text">
+      You did it!<br>
+      <span style="font-size:2.5rem;">🎉👏</span>
+      <br>Now go impress your friends with your magical scrolling powers.
+    </div>
+    <img class="funny-img" src="https://media.giphy.com/media/26ufdipQqU2lhNA4g/giphy.gif" alt="Party">
+  </div>
+
+<script>
+  // Confetti effect for last page
+  function launchConfetti() {
+    const canvas = document.getElementById('confetti');
+    const ctx = canvas.getContext('2d');
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+    let pieces = [];
+    for (let i = 0; i < 120; i++) {
+      pieces.push({
+        x: Math.random() * canvas.width,
+        y: Math.random() * -canvas.height,
+        r: 6 + Math.random() * 8,
+        d: Math.random() * 80,
+        color: `hsl(${Math.random()*360},90%,60%)`,
+        tilt: Math.random() * 10 - 10,
+        tiltAngle: 0,
+        tiltAngleIncremental: (Math.random() * 0.07) + .05
+      });
+    }
+    function draw() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      for (let i = 0; i < pieces.length; i++) {
+        let p = pieces[i];
+        ctx.beginPath();
+        ctx.lineWidth = p.r;
+        ctx.strokeStyle = p.color;
+        ctx.moveTo(p.x + p.tilt + (p.r/3), p.y);
+        ctx.lineTo(p.x + p.tilt, p.y + p.tilt + p.d/3);
+        ctx.stroke();
+      }
+      update();
+    }
+    function update() {
+      for (let i = 0; i < pieces.length; i++) {
+        let p = pieces[i];
+        p.y += (Math.cos(p.d) + 3 + p.r/2) / 2;
+        p.x += Math.sin(0.01 * p.d);
+        p.tiltAngle += p.tiltAngleIncremental;
+        p.tilt = Math.sin(p.tiltAngle) * 15;
+        if (p.y > canvas.height) {
+          p.x = Math.random() * canvas.width;
+          p.y = -20;
+        }
+      }
+    }
+    let confettiAnim = setInterval(draw, 16);
+    setTimeout(() => {
+      clearInterval(confettiAnim);
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+    }, 3500);
+  }
+
+  function showSnapIndicator() {
+    const el = document.getElementById('snapIndicator');
+    el.classList.add('active');
+    setTimeout(() => el.classList.remove('active'), 350);
+  }
+
+  function showScrollTip(text) {
+    const tip = document.getElementById('scrollTip');
+    tip.textContent = text;
+    tip.style.display = 'block';
+    tip.classList.remove('hide');
+    setTimeout(() => { tip.style.display = 'none'; }, 3000);
+  }
+
+  // Snap scroll logic for sections
+  let currentPage = 0;
+  const pages = Array.from(document.querySelectorAll('.page'));
+
+  function scrollToPage(idx) {
+    if (idx < 0) idx = 0;
+    if (idx >= pages.length) idx = pages.length - 1;
+    currentPage = idx;
+    pages[idx].scrollIntoView({ behavior: 'smooth' });
+    if (idx === pages.length - 1) {
+      launchConfetti();
+      showScrollTip("🎉 You reached the end!");
+    }
+  }
+
+  async function initSnapScroll() {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+      const source = audioContext.createMediaStreamSource(stream);
+      const analyser = audioContext.createAnalyser();
+      analyser.fftSize = 512;
+      source.connect(analyser);
+
+      const dataArray = new Uint8Array(analyser.fftSize);
+      let lastSnapTime = 0;
+      let snapCount = 0;
+      let snapTimeout = null;
+
+      function detectSnap() {
+        analyser.getByteTimeDomainData(dataArray);
+        let maxAmp = 0;
+
+        for (let i = 0; i < dataArray.length; i++) {
+          let amp = Math.abs(dataArray[i] - 128);
+          if (amp > maxAmp) maxAmp = amp;
+        }
+
+        let now = Date.now();
+        if (maxAmp > 40 && now - lastSnapTime > 300) {
+          lastSnapTime = now;
+          snapCount++;
+          showSnapIndicator();
+
+          if (snapTimeout) clearTimeout(snapTimeout);
+
+   // ...existing code...
+snapTimeout = setTimeout(() => {
+  if (snapCount === 1) {
+    if (currentPage < pages.length - 1) {
+      scrollToPage(currentPage + 1);
+      showScrollTip("Scrolled down! 👇");
+      document.body.style.background = "linear-gradient(120deg, #ffe0b2 0%, #fffde7 100%)";
+      setTimeout(() => {
+        document.body.style.background = "linear-gradient(120deg, #ffefba 0%, #ffffff 100%)";
+      }, 800);
+    } else {
+      showScrollTip("You're at the end! 🎉");
+      document.body.style.background = "linear-gradient(120deg, #ffe0b2 0%, #fffde7 100%)";
+      setTimeout(() => {
+        document.body.style.background = "linear-gradient(120deg, #ffefba 0%, #ffffff 100%)";
+      }, 800);
+    }
+  } else if (snapCount === 2) {
+    if (currentPage > 0) {
+      scrollToPage(currentPage - 1);
+      showScrollTip("Scrolled up! 👆");
+      document.body.style.background = "linear-gradient(120deg, #ffe0b2 0%, #fffde7 100%)";
+      setTimeout(() => {
+        document.body.style.background = "linear-gradient(120deg, #ffefba 0%, #ffffff 100%)";
+      }, 800);
+    } else {
+      showScrollTip("You're at the top! 🏁");
+      document.body.style.background = "linear-gradient(120deg, #ffe0b2 0%, #fffde7 100%)";
+      setTimeout(() => {
+        document.body.style.background = "linear-gradient(120deg, #ffefba 0%, #ffffff 100%)";
+      }, 800);
+    }
+  }
+  // Always reset state so user can snap again
+  lastSnapTime = 0;
+  snapCount = 0;
+}, 600); // Increased from 250ms to 600ms
+// ...existing code...
+        }
+
+        requestAnimationFrame(detectSnap);
+      }
+
+      detectSnap();
+    } catch (err) {
+      alert('Microphone access denied or error: ' + err);
+    }
+  }
+
+  // For keyboard navigation (optional/fun)
+  document.addEventListener('keydown', e => {
+    if (e.key === 'ArrowDown') scrollToPage(currentPage + 1);
+    if (e.key === 'ArrowUp') scrollToPage(currentPage - 1);
+  });
+
+  // Resize confetti canvas on window resize
+  window.addEventListener('resize', () => {
+    const canvas = document.getElementById('confetti');
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+  });
+
+  // Start at first page
+  window.onload = () => {
+    scrollToPage(0);
+    initSnapScroll();
+  };
+</script>
+
+</body>
+</html>
